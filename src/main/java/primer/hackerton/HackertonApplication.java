@@ -33,6 +33,6 @@ public class HackertonApplication {
 
 	@Scheduled(fixedDelay = 5000, initialDelay = 5000)
 	public void startProcessReports() throws InterruptedException, IOException {
-		openApiManager.processReports("C:\\Users\\정연호\\Desktop\\공부방법\\이력서\\해커톤\\프라이머GenAI\\hackerton\\output1.csv");
+		openApiManager.processReports("/home/ubuntu/gen/ouput1.csv");
 	}
 }

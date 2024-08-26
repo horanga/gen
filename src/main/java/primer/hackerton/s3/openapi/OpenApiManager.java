@@ -24,10 +24,10 @@ import java.util.Map;
 @Component
 @Slf4j
 public class OpenApiManager {
-    private final String ROOT_PATH = "C:\\Users\\정연호\\Desktop\\공부방법\\이력서\\해커톤\\프라이머GenAI";
+    private final String ROOT_PATH = "/home/ubuntu/gen/ouput1.csv";
     private final String BASE_URL = "https://opendart.fss.or.kr/api/";
     private final String API_URL = "list.json";
-    private final String SERVICE_KEY = "?crtfc_key=9adc08200200601123b39a93a0d30a5a754fe3d6";
+    private final String SERVICE_KEY = "?crtfc_key=419d5b210cd8f71d5d4671b5c41cf1aeda55fbbf";
     private final String CORP_CODE = "&corp_code=";
     private final String BGN_DE = "&bgn_de=";
 
