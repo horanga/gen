@@ -56,7 +56,7 @@ public class HtmlParser {
         return reportInfos;
     }
 
-    private static String extractCompanyNameFromRow(Element row) {
+    public static String extractCompanyNameFromRow(Element row) {
         return row.select("td").get(1).text().split(" ")[1];
     }
 

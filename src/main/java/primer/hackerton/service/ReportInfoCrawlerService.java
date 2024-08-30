@@ -1,6 +1,7 @@
 package primer.hackerton.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ReportInfoCrawlerService {
@@ -33,7 +35,7 @@ public class ReportInfoCrawlerService {
         int page = 1;
         List<ReportInfo> crawlResult;
         while (true) {
-            crawlResult = crwalReportInfoByPage(page);
+            crawlResult = htmlParser.extractReportInfoFromHtml(crawlReportInfoByPage(page));
             page++;
             if (crawlResult == null) {
                 break;
@@ -42,12 +44,12 @@ public class ReportInfoCrawlerService {
         return filter(crawlResult);
     }
 
-    private List<ReportInfo> crwalReportInfoByPage(int page) throws InterruptedException {
+    public String crawlReportInfoByPage(int page) throws InterruptedException {
         MultiValueMap<String, Object> params = buildSearchParameters(page);
         String html = fetchHtmlResponse(params);
         if (html == null) return null;
 
-        return htmlParser.extractReportInfoFromHtml(html);
+        return html;
     }
 
     private static MultiValueMap<String, Object> buildSearchParameters(int page) {
