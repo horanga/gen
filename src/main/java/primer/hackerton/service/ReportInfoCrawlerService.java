@@ -26,17 +26,20 @@ import java.util.Map;
 @Service
 public class ReportInfoCrawlerService {
 
+    private static final String ALL_COMPANY = "All";
+    private static final int FIRST_PAGE = 1;
+
     private static final String PDF_SEARCH_API_URL = "https://dart.fss.or.kr/dsab007/detailSearch.ax";
     private final RestTemplate restTemplate;
     private final HtmlParser htmlParser;
 
-    public List<ReportInfo> crawlReportInfo() throws InterruptedException, IOException {
+    public List<ReportInfo> crawlAllReportInfo() throws InterruptedException, IOException {
 
-        int page = 1;
+        int page = FIRST_PAGE;
         List<ReportInfo> crawlResult;
         while (true) {
             crawlResult = htmlParser.extractReportInfoFromHtml(crawlReportInfoByPage(page));
-            page++;
+            page += 1;
             if (crawlResult == null) {
                 break;
             }
@@ -44,15 +47,32 @@ public class ReportInfoCrawlerService {
         return filter(crawlResult);
     }
 
+    public ReportInfo crawlReportInfoByCompanyName(String companyName) throws InterruptedException {
+        MultiValueMap<String, Object> params = buildSearchParameters(FIRST_PAGE, companyName);
+        String html = fetchHtmlResponse(params);
+        List<ReportInfo> reportInfos = htmlParser.extractReportInfoFromHtml(html);
+
+        ReportInfo reportInfo = null;
+        for (int i = 0; i < reportInfos.size() - 1; i++) {
+            String submissionDate1 = reportInfos.get(i).getSubmissionDate();
+            String submissionDate2 = reportInfos.get(i + 1).getSubmissionDate();
+
+            if (compareDate(submissionDate1, submissionDate2)) {
+                reportInfo = reportInfos.get(i);
+            }
+        }
+        return reportInfo;
+    }
+
     public String crawlReportInfoByPage(int page) throws InterruptedException {
-        MultiValueMap<String, Object> params = buildSearchParameters(page);
+        MultiValueMap<String, Object> params = buildSearchParameters(page, ALL_COMPANY);
         String html = fetchHtmlResponse(params);
         if (html == null) return null;
 
         return html;
     }
 
-    private static MultiValueMap<String, Object> buildSearchParameters(int page) {
+    private static MultiValueMap<String, Object> buildSearchParameters(int page, String companyname) {
 
         LocalDate endDate = LocalDate.now();
         // 1년 전 날짜 계산
@@ -61,6 +81,14 @@ public class ReportInfoCrawlerService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
         MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+        if (companyname.equals(ALL_COMPANY)) {
+            params.add("textCrpNm", "");
+            params.add("textCrpNm2", "");
+        } else {
+            params.add("textCrpNm", companyname);
+            params.add("textCrpNm2", companyname);
+        }
+
         params.add("currentPage", page);
         params.add("maxResults", "100");
         params.add("maxLinks", "10");
@@ -74,10 +102,8 @@ public class ReportInfoCrawlerService {
         params.add("businessCode", "all");
         params.add("autoSearch", "N");
         params.add("option", "report");
-        params.add("textCrpNm", "");
         params.add("reportName", "분기보고서");
         params.add("tocSrch", "");
-        params.add("textCrpNm2", "");
         params.add("textPresenterNm", "");
         params.add("startDate", startDate.format(formatter));
         params.add("endDate", endDate.format(formatter));

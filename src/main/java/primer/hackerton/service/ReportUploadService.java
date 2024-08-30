@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import primer.hackerton.domain.report.dto.ReportInfo;
+import primer.hackerton.web.report.dto.SearchDto;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,7 +22,7 @@ public class ReportUploadService {
     private final S3Service s3Service;
 
     public void uploadAllPdfsToS3() throws IOException, InterruptedException {
-        List<ReportInfo> reportInfos = reportInfoCrawlerService.crawlReportInfo();
+        List<ReportInfo> reportInfos = reportInfoCrawlerService.crawlAllReportInfo();
 
         String date = getDate(reportInfos.get(0));
         int count = 0;
@@ -37,6 +38,16 @@ public class ReportUploadService {
             s3Service.uploadReportsToS3(companyName, url, date);
             Thread.sleep(1000);
         }
+    }
+
+
+    public String uploadPDFToS3(SearchDto searchDto) throws InterruptedException, IOException {
+        ReportInfo reportInfo = reportInfoCrawlerService.crawlReportInfoByCompanyName(searchDto.getCompanyName());
+        String pdfLink = reportInfo.getReportLink();
+        String dcmNo = reportInfo.getDocumentNumber();
+        String date = getDate(reportInfo);
+        String url = makeUrl(pdfLink, dcmNo);
+        return s3Service.uploadReportsToS3(searchDto.getCompanyName(), url, date);
     }
 
     private String getDate(ReportInfo reportInfos) {
