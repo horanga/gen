@@ -109,11 +109,13 @@ public class ArticleService {
 
             doc = Jsoup.connect(i.getLink()).get();
 
-            if(doc==null){
-                return null;
-            }
+
         } catch (Exception e) {
             log.error("https 에러");
+        }
+
+        if(doc==null){
+            return null;
         }
         Element articleContent = null;
 
