@@ -15,7 +15,7 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @GetMapping("/search")
-    public List<ArticleDto> search(@RequestParam("companyName") String companyName){
+    public List<ArticleDto> search(@RequestParam("companyName") String companyName) {
         return articleService.getArticles(companyName);
     }
 }

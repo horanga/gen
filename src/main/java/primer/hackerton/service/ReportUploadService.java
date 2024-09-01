@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import primer.hackerton.domain.report.dto.ReportInfo;
-import primer.hackerton.web.report.dto.SearchDto;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,13 +40,13 @@ public class ReportUploadService {
     }
 
 
-    public String uploadPDFToS3(SearchDto searchDto) throws InterruptedException, IOException {
-        ReportInfo reportInfo = reportInfoCrawlerService.crawlReportInfoByCompanyName(searchDto.getCompanyName());
+    public String uploadPDFToS3(String searchDto) throws InterruptedException, IOException {
+        ReportInfo reportInfo = reportInfoCrawlerService.crawlReportInfoByCompanyName(searchDto);
         String pdfLink = reportInfo.getReportLink();
         String dcmNo = reportInfo.getDocumentNumber();
         String date = getDate(reportInfo);
         String url = makeUrl(pdfLink, dcmNo);
-        return s3Service.uploadReportsToS3(searchDto.getCompanyName(), url, date);
+        return s3Service.uploadReportsToS3(searchDto, url, date);
     }
 
     private String getDate(ReportInfo reportInfos) {
