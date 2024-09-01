@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import primer.hackerton.service.ReportUploadService;
+import primer.hackerton.web.report.dto.SearchDto;
 
 import java.io.IOException;
 
@@ -28,10 +29,10 @@ public class ReportController {
     }
 
     @PostMapping("/search")
-    public String searchQuarterReportsToS3(@RequestBody String searchString) {
+    public String searchQuarterReportsToS3(@RequestBody SearchDto searchDto) {
 
         try {
-            return reportUploadService.uploadPDFToS3(searchString);
+            return reportUploadService.uploadPDFToS3(searchDto);
         } catch (InterruptedException | IOException e) {
             throw new RuntimeException(e);
         }
