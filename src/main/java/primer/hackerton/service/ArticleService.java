@@ -74,7 +74,6 @@ public class ArticleService {
                             || title.length() > 2 && title.contains(companySubstring);
                 }).map(i ->
                         {
-                            Document doc;
                             try {
                                 String content = getNews(i);
 
@@ -109,6 +108,10 @@ public class ArticleService {
 
 
             doc = Jsoup.connect(i.getLink()).get();
+
+            if(doc==null){
+                return null;
+            }
         } catch (Exception e) {
             log.error("https 에러");
         }
