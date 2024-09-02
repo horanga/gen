@@ -27,7 +27,7 @@ public class HtmlParser {
     private static final String[] REPORT_EXCLUSION_KEYWORDS = {"[기재정정]", "정정"};
     private static final int ONE_MINUTE = 60 * 1000;
     private static final int ONE_SECOND = 1000;
-    private static final int TEN_SECONDS = 10 * 1000;
+    private static final int TEN_SECONDS = 5 * 1000;
 
     public List<ReportInfo> extractReportInfoFromHtml(String html) throws InterruptedException {
         List<ReportInfo> reportInfos = new ArrayList<>();
@@ -83,9 +83,6 @@ public class HtmlParser {
             Document doc = Jsoup.connect(url)
                     .timeout(TEN_SECONDS)
                     .userAgent(USER_AGENT_INFO)
-                    .ignoreHttpErrors(true)
-                    .ignoreContentType(true)
-                    .sslSocketFactory(createSSLSocketFactory())
                     .get();
 
 
@@ -104,23 +101,5 @@ public class HtmlParser {
         }
 
         return dcmNo;
-    }
-
-    private static SSLSocketFactory createSSLSocketFactory() {
-        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                return new X509Certificate[0];
-            }
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-            public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-        }};
-
-        try {
-            SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            return sslContext.getSocketFactory();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create SSL socket factory", e);
-        }
     }
 }
