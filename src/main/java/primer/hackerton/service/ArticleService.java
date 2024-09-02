@@ -15,9 +15,7 @@ import primer.hackerton.web.article.dto.response.ArticleDto;
 import primer.hackerton.web.article.dto.response.ArticleDtoForSorting;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -39,30 +37,31 @@ public class ArticleService {
 
     private final RestTemplate restTemplate;
 
-    public List<ArticleDto> getArticles(String companyName) {
+    public List<ArticleDto> getArticles(String companyName, int count) {
 
         RequestEntity<Void> req = setRequestParam(companyName, SORT_DATE_CRITERIA);
 
         String response = restTemplate.exchange(req, String.class).getBody();
         List<ArticleDtoForSorting> articles = parseArticles(response);
-        List<ArticleDto> filter = filter(articles, companyName);
+        List<ArticleDto> filter = filter(articles, companyName, count);
 
         /*
         최신 날짜순으로 하면 제목에 회사 이름이 걸리지 않을 수 있음.
         그래서, 정확도 순으로 한번 더 검색하게끔 로직 구현
          */
 
-        if(filter.isEmpty()){
+        if(filter.isEmpty() || filter.size()<count){
             req = setRequestParam(companyName, SORT_ACCURACY_CRITERIA);
             response = restTemplate.exchange(req, String.class).getBody();
             articles = parseArticles(response);
-            filter = filter(articles, companyName);
+            int countOfNeededArticles = count- filter.size();
+            filter.addAll(filter(articles, companyName, countOfNeededArticles));
         }
 
         return filter;
     }
 
-    private List<ArticleDto> filter(List<ArticleDtoForSorting> list, String companyName) {
+    private List<ArticleDto> filter(List<ArticleDtoForSorting> list, String companyName, int count) {
 
         return list.parallelStream()
                 .filter(i ->
@@ -87,7 +86,7 @@ public class ArticleService {
                         }
                 )
                 .filter(Objects::nonNull)
-                .limit(5)
+                .limit(count)
                 .toList();
     }
 
