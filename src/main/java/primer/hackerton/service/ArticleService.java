@@ -14,7 +14,12 @@ import org.springframework.web.client.RestTemplate;
 import primer.hackerton.web.article.dto.response.ArticleDto;
 import primer.hackerton.web.article.dto.response.ArticleDtoForSorting;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.*;
 
 @Slf4j
@@ -50,13 +55,14 @@ public class ArticleService {
         그래서, 정확도 순으로 한번 더 검색하게끔 로직 구현
          */
 
-        if(filter.isEmpty() || filter.size()<count){
+        if (filter.isEmpty() || filter.size() < count) {
             req = setRequestParam(companyName, SORT_ACCURACY_CRITERIA);
             response = restTemplate.exchange(req, String.class).getBody();
             articles = parseArticles(response);
-            int countOfNeededArticles = count- filter.size();
+            int countOfNeededArticles = count - filter.size();
             ArrayList<ArticleDto> copyList = new ArrayList<>(filter);
             copyList.addAll(filter(articles, companyName, countOfNeededArticles));
+            return copyList;
         }
 
         return filter;
@@ -107,14 +113,18 @@ public class ArticleService {
         try {
 
 
-            doc = Jsoup.connect(i.getLink()).get();
-
+            doc = Jsoup.connect(i.getLink())
+                    .timeout(5000)
+                    .ignoreHttpErrors(true)
+                    .ignoreContentType(true)
+                    .sslSocketFactory(createSSLSocketFactory())
+                    .get();
 
         } catch (Exception e) {
             log.error("https 에러");
         }
 
-        if(doc==null){
+        if (doc == null) {
             return null;
         }
         Element articleContent = null;
@@ -163,7 +173,7 @@ public class ArticleService {
 
     private RequestEntity<Void> setRequestParam(String companyName, String criteria) {
         RequestEntity<Void> req = RequestEntity
-                .get(makesUrl(companyName, SORT_DATE_CRITERIA))
+                .get(makesUrl(companyName, criteria))
                 .header("X-Naver-Client-Id", NAVER_CLIENT_ID)
                 .header("X-Naver-Client-Secret", NAVER_SECRET_KEY)
                 .build();
@@ -187,5 +197,27 @@ public class ArticleService {
             e.printStackTrace();
         }
         return articles;
+    }
+
+    private static SSLSocketFactory createSSLSocketFactory() {
+        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+        }};
+
+        try {
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            return sslContext.getSocketFactory();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create SSL socket factory", e);
+        }
     }
 }
