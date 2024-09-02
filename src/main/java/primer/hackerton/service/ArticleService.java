@@ -55,7 +55,8 @@ public class ArticleService {
             response = restTemplate.exchange(req, String.class).getBody();
             articles = parseArticles(response);
             int countOfNeededArticles = count- filter.size();
-            filter.addAll(filter(articles, companyName, countOfNeededArticles));
+            ArrayList<ArticleDto> copyList = new ArrayList<>(filter);
+            copyList.addAll(filter(articles, companyName, countOfNeededArticles));
         }
 
         return filter;
