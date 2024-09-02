@@ -1,4 +1,4 @@
-package primer.hackerton.web.report.dto;
+package primer.hackerton.web.report.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

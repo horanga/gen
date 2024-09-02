@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static primer.hackerton.service.ReportUploadService.QUARTERLY_REPORT;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -47,12 +49,18 @@ public class ReportInfoCrawlerService {
         return filter(crawlResult);
     }
 
-    public ReportInfo crawlReportInfoByCompanyName(String companyName) throws InterruptedException {
-        MultiValueMap<String, Object> params = buildSearchParameters(FIRST_PAGE, companyName);
+    public ReportInfo crawlReportInfoByCompanyName(String companyName, String type) throws InterruptedException {
+        MultiValueMap<String, Object> params = buildSearchParameters(FIRST_PAGE, companyName, type);
         String html = fetchHtmlResponse(params);
+        if(html ==null){
+            return null;
+        }
         List<ReportInfo> reportInfos = htmlParser.extractReportInfoFromHtml(html);
 
         ReportInfo reportInfo = null;
+        if(reportInfos.size()==1){
+            return reportInfos.get(0);
+        }
         for (int i = 0; i < reportInfos.size() - 1; i++) {
             String submissionDate1 = reportInfos.get(i).getSubmissionDate();
             String submissionDate2 = reportInfos.get(i + 1).getSubmissionDate();
@@ -65,14 +73,14 @@ public class ReportInfoCrawlerService {
     }
 
     public String crawlReportInfoByPage(int page) throws InterruptedException {
-        MultiValueMap<String, Object> params = buildSearchParameters(page, ALL_COMPANY);
+        MultiValueMap<String, Object> params = buildSearchParameters(page, ALL_COMPANY, QUARTERLY_REPORT);
         String html = fetchHtmlResponse(params);
         if (html == null) return null;
 
         return html;
     }
 
-    private static MultiValueMap<String, Object> buildSearchParameters(int page, String companyname) {
+    private static MultiValueMap<String, Object> buildSearchParameters(int page, String companyname, String reportType) {
 
         LocalDate endDate = LocalDate.now();
         // 1년 전 날짜 계산
@@ -102,7 +110,7 @@ public class ReportInfoCrawlerService {
         params.add("businessCode", "all");
         params.add("autoSearch", "N");
         params.add("option", "report");
-        params.add("reportName", "분기보고서");
+        params.add("reportName", reportType);
         params.add("tocSrch", "");
         params.add("textPresenterNm", "");
         params.add("startDate", startDate.format(formatter));

@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import primer.hackerton.domain.report.dto.ReportInfo;
-import primer.hackerton.web.report.dto.SearchDto;
+import primer.hackerton.web.report.dto.request.SearchDto;
+import primer.hackerton.web.report.dto.response.ReportResult;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,7 +14,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ReportUploadService {
-
+    public static final String QUARTERLY_REPORT = "분기보고서";
+    private static final String AUDIT_REPORT = "감사보고서";
     private static final String PDF_DOWNLOAD_URL = "https://dart.fss.or.kr/pdf/download/pdf.do?";
     private static final String RCP_NO_PARAM = "rcp_no=";
     private static final String DCM_NO_PARAM = "&dcm_no=";
@@ -41,13 +43,25 @@ public class ReportUploadService {
     }
 
 
-    public String uploadPDFToS3(SearchDto searchDto) throws InterruptedException, IOException {
-        ReportInfo reportInfo = reportInfoCrawlerService.crawlReportInfoByCompanyName(searchDto.getCompanyName());
+    public ReportResult uploadPDFToS3(SearchDto searchDto) throws InterruptedException, IOException {
+        ReportInfo reportInfo = reportInfoCrawlerService.crawlReportInfoByCompanyName(searchDto.getCompanyName(), QUARTERLY_REPORT);
+        ReportResult result = new ReportResult();
+        if(reportInfo==null){
+            reportInfo = reportInfoCrawlerService.crawlReportInfoByCompanyName(searchDto.getCompanyName(), AUDIT_REPORT);
+            result.setType(AUDIT_REPORT);
+        } else{
+            result.setType(QUARTERLY_REPORT);
+        }
         String pdfLink = reportInfo.getReportLink();
         String dcmNo = reportInfo.getDocumentNumber();
         String date = getDate(reportInfo);
         String url = makeUrl(pdfLink, dcmNo);
-        return s3Service.uploadReportsToS3(searchDto.getCompanyName(), url, date);
+
+        String reportUrl = s3Service.uploadReportsToS3(searchDto.getCompanyName(), url, date);
+        result.setReportUrl(reportUrl);
+
+
+        return result;
     }
 
     private String getDate(ReportInfo reportInfos) {
