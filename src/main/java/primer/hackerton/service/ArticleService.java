@@ -70,7 +70,7 @@ public class ArticleService {
 
     private List<ArticleDto> filter(List<ArticleDtoForSorting> list, String companyName, int count) {
 
-        return list.parallelStream()
+        return list.stream()
                 .filter(i ->
                 {
                     String title = i.getTitle();
@@ -111,8 +111,6 @@ public class ArticleService {
     private static String getNews(ArticleDtoForSorting i) throws IOException {
         Document doc = null;
         try {
-
-
             doc = Jsoup.connect(i.getLink())
                     .timeout(5000)
                     .ignoreHttpErrors(true)
