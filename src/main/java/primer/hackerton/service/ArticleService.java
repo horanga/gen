@@ -34,6 +34,7 @@ public class ArticleService {
     private static final String SORT_DATE_CRITERIA = "date";
     private static final String SORT_ACCURACY_CRITERIA = "sim";
     private static final int MAX_ARTICLE = 100;
+    private static final Map<String, List<ArticleDto>> map = new HashMap<>();
 
     @Value("${naver.client-id}")
     private String NAVER_CLIENT_ID;
@@ -43,6 +44,9 @@ public class ArticleService {
     private final RestTemplate restTemplate;
 
     public List<ArticleDto> getArticles(String companyName, int count) {
+        if(map.containsKey(companyName)){
+            return map.get(companyName);
+        }
 
         RequestEntity<Void> req = setRequestParam(companyName, SORT_DATE_CRITERIA);
 
