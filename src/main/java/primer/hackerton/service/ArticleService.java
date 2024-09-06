@@ -8,6 +8,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -34,7 +35,6 @@ public class ArticleService {
     private static final String SORT_DATE_CRITERIA = "date";
     private static final String SORT_ACCURACY_CRITERIA = "sim";
     private static final int MAX_ARTICLE = 100;
-    private static final Map<String, List<ArticleDto>> map = new HashMap<>();
 
     @Value("${naver.client-id}")
     private String NAVER_CLIENT_ID;
@@ -43,10 +43,9 @@ public class ArticleService {
 
     private final RestTemplate restTemplate;
 
+    @Cacheable(value = "articlesCache", key = "#companyName + '_' + #count")
     public List<ArticleDto> getArticles(String companyName, int count) {
-        if(map.containsKey(companyName)){
-            return map.get(companyName);
-        }
+
 
         RequestEntity<Void> req = setRequestParam(companyName, SORT_DATE_CRITERIA);
 
